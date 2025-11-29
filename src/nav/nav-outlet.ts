@@ -4,7 +4,6 @@ import {
 	ChangeDetectorRef,
 	Component,
 	Directive,
-	ElementRef,
 	inject,
 	Input,
 	NgZone,
@@ -19,6 +18,7 @@ import { ngbNavFadeInTransition, ngbNavFadeOutTransition } from './nav-transitio
 import { ngbRunTransition, NgbTransitionOptions } from '@ng-bootstrap/ng-bootstrap/utils';
 import { NgbNav, NgbNavItem } from './nav';
 import { NgTemplateOutlet } from '@angular/common';
+import { NgbNavPaneDomHelper } from './NgbNavPaneDomHelper';
 
 @Directive({
 	selector: '[ngbNavPane]',
@@ -31,11 +31,19 @@ import { NgTemplateOutlet } from '@angular/common';
 	},
 })
 export class NgbNavPane {
-	nativeElement = inject(ElementRef).nativeElement as HTMLElement;
+	private _domHelper: NgbNavPaneDomHelper;
 
 	@Input() item: NgbNavItem;
 	@Input() nav: NgbNav;
 	@Input() role: string;
+
+	setClasses(classes: string[], add: boolean): void {
+        this._domHelper.setClasses(classes, add); // delega a ação para o Helper
+    }
+
+    getNativeElement(): HTMLElement {
+        return this._domHelper.getNativeElement(); // delega a ação para o Helper
+    }
 }
 
 /**
@@ -107,7 +115,7 @@ export class NgbNavOutlet implements AfterViewInit {
 
 				// fading out
 				if (this._activePane) {
-					ngbRunTransition(this._ngZone, this._activePane.nativeElement, ngbNavFadeOutTransition, options).subscribe(
+					ngbRunTransition(this._ngZone, this._activePane.getNativeElement(), ngbNavFadeOutTransition, options).subscribe(
 						() => {
 							const activeItem = this._activePane?.item;
 							this._activePane = this._getPaneForItem(nextItem);
@@ -120,10 +128,10 @@ export class NgbNavOutlet implements AfterViewInit {
 							if (this._activePane) {
 								// we have to add the '.active' class before running the transition,
 								// because it should be in place before `ngbRunTransition` does `reflow()`
-								this._activePane.nativeElement.classList.add('active');
+								this._activePane.setClasses(['active'], true);
 								ngbRunTransition(
 									this._ngZone,
-									this._activePane.nativeElement,
+									this._activePane.getNativeElement(),
 									ngbNavFadeInTransition,
 									options,
 								).subscribe(() => {
@@ -148,7 +156,7 @@ export class NgbNavOutlet implements AfterViewInit {
 
 	private _updateActivePane() {
 		this._activePane = this._getActivePane();
-		this._activePane?.nativeElement.classList.add('show', 'active');
+		this._activePane?.setClasses(['show', 'active'], true);
 	}
 
 	private _getPaneForItem(item: NgbNavItem | null) {

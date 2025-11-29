@@ -1,7 +1,6 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
-	ElementRef,
 	EventEmitter,
 	inject,
 	Input,
@@ -15,6 +14,7 @@ import { Observable } from 'rxjs';
 import { NgbAlertConfig } from './alert-config';
 import { ngbRunTransition } from '@ng-bootstrap/ng-bootstrap/utils';
 import { ngbAlertFadingTransition } from './alert-transition';
+import { NgbAlertTransitionRunner } from './alert-transition-runner';
 
 /**
  * Alert is a component to provide contextual feedback messages for user.
@@ -48,7 +48,7 @@ import { ngbAlertFadingTransition } from './alert-transition';
 })
 export class NgbAlert {
 	private _config = inject(NgbAlertConfig);
-	private _elementRef = inject(ElementRef<HTMLElement>);
+	private _transitionRunner = inject(NgbAlertTransitionRunner);
 	private _zone = inject(NgZone);
 
 	/**
@@ -95,10 +95,7 @@ export class NgbAlert {
 	 * @since 8.0.0
 	 */
 	close(): Observable<void> {
-		const transition = ngbRunTransition(this._zone, this._elementRef.nativeElement, ngbAlertFadingTransition, {
-			animation: this.animation,
-			runningTransition: 'continue',
-		});
+		const transition = this._transitionRunner.run(this.animation);
 		transition.subscribe(() => this.closed.emit());
 		return transition;
 	}

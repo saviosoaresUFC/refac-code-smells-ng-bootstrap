@@ -1,81 +1,88 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { NgbModalWindow } from './modal-window';
+import { getModalWindowElements } from './modal-dom-helper.spec';
 
 describe('ngb-modal-dialog', () => {
 	let fixture: ComponentFixture<NgbModalWindow>;
+	let component: NgbModalWindow;
 
 	beforeEach(() => {
 		fixture = TestBed.createComponent(NgbModalWindow);
+		component = fixture.componentInstance;
 	});
+
+	const getElements = () => getModalWindowElements(fixture);
 
 	describe('basic rendering functionality', () => {
 		it('should render default modal window', () => {
 			fixture.detectChanges();
-
-			const modalEl: Element = fixture.nativeElement;
-			const dialogEl: Element = fixture.nativeElement.querySelector('.modal-dialog');
+			const { modalEl, dialogEl } = getElements();
 
 			expect(modalEl).toHaveCssClass('modal');
 			expect(dialogEl).toHaveCssClass('modal-dialog');
 		});
 
 		it('should render default modal window with a specified size', () => {
-			fixture.componentInstance.size = 'sm';
+			component.size = 'sm';
 			fixture.detectChanges();
+			const { dialogEl } = getElements();
 
-			const dialogEl: Element = fixture.nativeElement.querySelector('.modal-dialog');
 			expect(dialogEl).toHaveCssClass('modal-dialog');
 			expect(dialogEl).toHaveCssClass('modal-sm');
 		});
 
 		it('should render default modal window with a specified fullscreen size', () => {
 			fixture.detectChanges();
-			const dialogEl = fixture.nativeElement.querySelector('.modal-dialog') as HTMLElement;
+			let { dialogEl } = getElements();
+
 			expect(dialogEl).not.toHaveCssClass('modal-fullscreen');
 
-			fixture.componentInstance.fullscreen = true;
+			component.fullscreen = true;
 			fixture.detectChanges();
+			({ dialogEl } = getElements());
 			expect(dialogEl).toHaveCssClass('modal-fullscreen');
 
-			fixture.componentInstance.fullscreen = 'sm';
+			component.fullscreen = 'sm';
 			fixture.detectChanges();
+			({ dialogEl } = getElements());
 			expect(dialogEl).toHaveCssClass('modal-fullscreen-sm-down');
 
-			fixture.componentInstance.fullscreen = 'custom';
+			component.fullscreen = 'custom';
 			fixture.detectChanges();
+			({ dialogEl } = getElements());
 			expect(dialogEl).toHaveCssClass('modal-fullscreen-custom-down');
 		});
 
 		it('should render default modal window with a specified class', () => {
-			fixture.componentInstance.windowClass = 'custom-class';
+			component.windowClass = 'custom-class';
 			fixture.detectChanges();
+			const { modalEl } = getElements();
 
-			expect(fixture.nativeElement).toHaveCssClass('custom-class');
+			expect(modalEl).toHaveCssClass('custom-class');
 		});
 
 		it('aria attributes', () => {
 			fixture.detectChanges();
-			const dialogEl: Element = fixture.nativeElement.querySelector('.modal-dialog');
+			const { modalEl, dialogEl } = getElements();
 
-			expect(fixture.nativeElement.getAttribute('role')).toBe('dialog');
+			expect(modalEl.getAttribute('role')).toBe('dialog');
 			expect(dialogEl.getAttribute('role')).toBe('document');
 		});
 
 		it('should render default modal window with a specified role', () => {
-			fixture.componentInstance.role = 'alertdialog';
+			component.role = 'alertdialog';
 			fixture.detectChanges();
-			const dialogEl: Element = fixture.nativeElement.querySelector('.modal-dialog');
+			const { modalEl, dialogEl } = getElements();
 
-			expect(fixture.nativeElement.getAttribute('role')).toBe('alertdialog');
+			expect(modalEl.getAttribute('role')).toBe('alertdialog');
 			expect(dialogEl.getAttribute('role')).toBe('document');
 		});
 
 		it('should render modal dialog with a specified class', () => {
-			fixture.componentInstance.modalDialogClass = 'custom-dialog-class';
+			component.modalDialogClass = 'custom-dialog-class';
 			fixture.detectChanges();
+			const { dialogEl } = getElements();
 
-			const dialogEl: Element = fixture.nativeElement.querySelector('.modal-dialog');
 			expect(dialogEl).toHaveCssClass('modal-dialog');
 			expect(dialogEl).toHaveCssClass('custom-dialog-class');
 		});

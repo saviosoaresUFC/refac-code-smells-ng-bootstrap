@@ -9,7 +9,6 @@ import {
 	ContentChildren,
 	DestroyRef,
 	Directive,
-	ElementRef,
 	EventEmitter,
 	inject,
 	Injector,
@@ -35,6 +34,7 @@ import {
 	NgbSlideEventDirection,
 } from './carousel-transition';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NgbCarouselDomManager } from './NgbCarouselDomManager';
 
 let nextId = 0;
 let carouselId = 0;
@@ -137,7 +137,7 @@ export class NgbCarousel implements AfterContentChecked, AfterContentInit, After
 	private _platformId = inject(PLATFORM_ID);
 	private _ngZone = inject(NgZone);
 	private _cd = inject(ChangeDetectorRef);
-	private _container = inject(ElementRef);
+	private _domManager = inject(NgbCarouselDomManager);
 	private _destroyRef = inject(DestroyRef);
 	private _injector = inject(Injector);
 
@@ -334,7 +334,7 @@ export class NgbCarousel implements AfterContentChecked, AfterContentInit, After
 		}
 
 		this.slides.changes.pipe(takeUntilDestroyed(this._destroyRef)).subscribe(() => {
-			this._transitionIds?.forEach((id) => ngbCompleteTransition(this._getSlideElement(id)));
+			this._transitionIds?.forEach((id) => ngbCompleteTransition(this._domManager.getNativeSlideElement(id)));
 			this._transitionIds = null;
 
 			this._cd.markForCheck();
@@ -345,11 +345,10 @@ export class NgbCarousel implements AfterContentChecked, AfterContentInit, After
 				{
 					mixedReadWrite: () => {
 						for (const { id } of this.slides) {
-							const element = this._getSlideElement(id);
 							if (id === this.activeId) {
-								element.classList.add('active');
+								this._domManager.setSlideActive(id, true);
 							} else {
-								element.classList.remove('active');
+								this._domManager.setSlideActive(id, false);
 							}
 						}
 					},
@@ -367,10 +366,7 @@ export class NgbCarousel implements AfterContentChecked, AfterContentInit, After
 	ngAfterViewInit() {
 		// Initialize the 'active' class (not managed by the template)
 		if (this.activeId) {
-			const element = this._getSlideElement(this.activeId);
-			if (element) {
-				element.classList.add('active');
-			}
+			this._domManager.setSlideActive(this.activeId, true);
 		}
 	}
 
@@ -413,7 +409,7 @@ export class NgbCarousel implements AfterContentChecked, AfterContentInit, After
 	 * Set the focus on the carousel.
 	 */
 	focus() {
-		this._container.nativeElement.focus();
+		this._domManager.setFocus();
 	}
 
 	private _cycleToSelected(slideIdx: string, direction: NgbSlideEventDirection, source?: NgbSlideEventSource) {
@@ -445,7 +441,7 @@ export class NgbCarousel implements AfterContentChecked, AfterContentInit, After
 			if (activeSlide) {
 				const activeSlideTransition = ngbRunTransition(
 					this._ngZone,
-					this._getSlideElement(activeSlide.id),
+					this._domManager.getNativeSlideElement(activeSlide.id),
 					ngbCarouselTransitionOut,
 					options,
 				);
@@ -460,7 +456,7 @@ export class NgbCarousel implements AfterContentChecked, AfterContentInit, After
 			const nextSlide = this._getSlideById(this.activeId);
 			const transition = ngbRunTransition(
 				this._ngZone,
-				this._getSlideElement(selectedSlide.id),
+				this._domManager.getNativeSlideElement(selectedSlide.id),
 				ngbCarouselTransitionIn,
 				options,
 			);
@@ -525,10 +521,6 @@ export class NgbCarousel implements AfterContentChecked, AfterContentInit, After
 				? slideArr[slideArr.length - 1].id
 				: slideArr[0].id
 			: slideArr[currentSlideIdx - 1].id;
-	}
-
-	private _getSlideElement(slideId: string): HTMLElement {
-		return this._container.nativeElement.querySelector(`#slide-${slideId}`);
 	}
 }
 
