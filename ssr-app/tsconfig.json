@@ -1,0 +1,15 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"baseUrl": "./",
+		"outDir": "../out-tsc/ssr-app",
+		"paths": {
+			"@ng-bootstrap/ng-bootstrap": ["../dist/ng-bootstrap"],
+			"@ng-bootstrap/ng-bootstrap/*": ["../dist/ng-bootstrap/*"]
+		},
+		"types": ["@angular/localize"]
+	},
+	"files": ["src/main.ts", "src/main.server.ts", "server.ts"],
+	"include": ["src/**/*.d.ts"],
+	"exclude": ["src/**/*.po.ts", "src/**/*.e2e-spec.ts"]
+}

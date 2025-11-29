@@ -1,0 +1,37 @@
+<p>
+	When using non-manual triggers, you can control the delay to open and close the popover through the
+	<code>openDelay</code> and <code>closeDelay</code> properties. Note that the <code>autoClose</code> feature does not
+	use the close delay, it closes the popover immediately.
+</p>
+<p>
+	When using the <code>hover</code> trigger with a <code>closeDelay</code>, the popover will remain open if the mouse
+	enters it before the close delay is over. This is important for accessibility as it allows users of screen magnifiers
+	to move the cursor over the popover so they can magnify and read it without it disappearing. (See
+	<a href="https://www.w3.org/WAI/WCAG21/Understanding/content-on-hover-or-focus.html#hoverable"
+		>WCAG Success Criterion 1.4.13</a
+	>.)
+</p>
+
+<div class="buttons">
+	<button
+		type="button"
+		class="btn btn-outline-secondary me-2"
+		ngbPopover="You see, I show up after 300ms and disappear after 500ms!"
+		[openDelay]="300"
+		[closeDelay]="500"
+		triggers="mouseenter:mouseleave"
+	>
+		Hover 300ms here
+	</button>
+
+	<button
+		type="button"
+		class="btn btn-outline-secondary me-2"
+		ngbPopover="You see, I show up after 1s and disappear after 2s!"
+		[openDelay]="1000"
+		[closeDelay]="2000"
+		triggers="mouseenter:mouseleave"
+	>
+		Hover 1s here
+	</button>
+</div>

@@ -1,0 +1,12 @@
+<p>Default pagination:</p>
+<ngb-pagination [collectionSize]="70" [(page)]="page" aria-label="Default pagination" />
+
+<p>No direction links:</p>
+<ngb-pagination [collectionSize]="70" [(page)]="page" [directionLinks]="false" />
+
+<p>With boundary links:</p>
+<ngb-pagination [collectionSize]="70" [(page)]="page" [boundaryLinks]="true" />
+
+<hr />
+
+<pre>Current page: {{ page }}</pre>

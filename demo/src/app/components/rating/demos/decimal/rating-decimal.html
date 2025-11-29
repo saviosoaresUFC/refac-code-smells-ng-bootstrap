@@ -1,0 +1,18 @@
+<p>Custom readonly decimal rating with template provided via an input</p>
+
+<p>We use <code>bootstrap-icons</code> to display hearts</p>
+
+<ng-template #t let-fill="fill">
+	<i class="bi-heart-fill">
+		@if (fill > 0) {
+			<i class="bi-heart-fill filled" [style.width.%]="fill"></i>
+		}
+	</i>
+</ng-template>
+
+<ngb-rating [(rate)]="rating" [starTemplate]="t" [readonly]="true" [max]="5" [ariaValueText]="ariaValueText" />
+
+<hr />
+<pre>Rate: <b>{{ rating }}</b></pre>
+<button class="btn btn-sm btn-outline-primary me-2" (click)="rating = 1.35">1.35</button>
+<button class="btn btn-sm btn-outline-primary me-2" (click)="rating = 4.72">4.72</button>
