@@ -15,5 +15,5 @@ export interface NgbTimeStruct {
 	/**
 	 * The second in the `[0, 59]` range.
 	 */
-	second: number;
+	second: number | null;
 }

@@ -5,7 +5,7 @@ import { getTransitionDurationMs } from './util';
 import { environment } from './transition.environment';
 import { runInZone } from '../util';
 
-export type NgbTransitionStartFn<T = any> = (
+export type NgbTransitionStartFn<T extends object = Record<string, unknown>> = (
 	element: HTMLElement,
 	animation: boolean,
 	context: T,
@@ -18,8 +18,8 @@ export interface NgbTransitionOptions<T> {
 	context?: T;
 }
 
-export interface NgbTransitionCtx<T> {
-	transition$: Subject<any>;
+export interface NgbTransitionCtx<T extends object> {
+	transition$: Subject<void>;
 	complete: () => void;
 	context: T;
 }
@@ -27,9 +27,9 @@ export interface NgbTransitionCtx<T> {
 const noopFn: NgbTransitionEndFn = () => {};
 
 const { transitionTimerDelayMs } = environment;
-const runningTransitions = new Map<HTMLElement, NgbTransitionCtx<any>>();
+const runningTransitions = new Map<HTMLElement, NgbTransitionCtx<Record<string, unknown>>>();
 
-export const ngbRunTransition = <T>(
+export const ngbRunTransition = <T extends object>(
 	zone: NgZone,
 	element: HTMLElement,
 	startFn: NgbTransitionStartFn<T>,

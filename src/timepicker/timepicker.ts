@@ -14,6 +14,7 @@ import { NgbTime } from './ngb-time';
 import { NgbTimepickerConfig } from './timepicker-config';
 import { NgbTimeAdapter } from './ngb-time-adapter';
 import { NgbTimepickerI18n } from './timepicker-i18n';
+import { NgbTimeStruct } from './ngb-time-struct';
 
 const FILTER_REGEX = /[^0-9]/g;
 
@@ -54,13 +55,13 @@ const FILTER_REGEX = /[^0-9]/g;
 						placeholder="HH"
 						i18n-placeholder="@@ngb.timepicker.HH"
 						[value]="formatHour(model?.hour)"
-						(change)="updateHour($any($event).target.value)"
+						(change)="updateHour($event.target.value)"
 						[readOnly]="readonlyInputs"
 						[disabled]="disabled"
 						aria-label="Hours"
 						i18n-aria-label="@@ngb.timepicker.hours"
 						(blur)="handleBlur()"
-						(input)="formatInput($any($event).target)"
+						(input)="formatInput($event.target)"
 						(keydown.ArrowUp)="changeHour(hourStep); $event.preventDefault()"
 						(keydown.ArrowDown)="changeHour(-hourStep); $event.preventDefault()"
 					/>
@@ -107,13 +108,13 @@ const FILTER_REGEX = /[^0-9]/g;
 						placeholder="MM"
 						i18n-placeholder="@@ngb.timepicker.MM"
 						[value]="formatMinSec(model?.minute)"
-						(change)="updateMinute($any($event).target.value)"
+						(change)="updateMinute($event.target.value)"
 						[readOnly]="readonlyInputs"
 						[disabled]="disabled"
 						aria-label="Minutes"
 						i18n-aria-label="@@ngb.timepicker.minutes"
 						(blur)="handleBlur()"
-						(input)="formatInput($any($event).target)"
+						(input)="formatInput($event.target)"
 						(keydown.ArrowUp)="changeMinute(minuteStep); $event.preventDefault()"
 						(keydown.ArrowDown)="changeMinute(-minuteStep); $event.preventDefault()"
 					/>
@@ -161,13 +162,13 @@ const FILTER_REGEX = /[^0-9]/g;
 							placeholder="SS"
 							i18n-placeholder="@@ngb.timepicker.SS"
 							[value]="formatMinSec(model?.second)"
-							(change)="updateSecond($any($event).target.value)"
+							(change)="updateSecond($event.target.value)"
 							[readOnly]="readonlyInputs"
 							[disabled]="disabled"
 							aria-label="Seconds"
 							i18n-aria-label="@@ngb.timepicker.seconds"
 							(blur)="handleBlur()"
-							(input)="formatInput($any($event).target)"
+							(input)="formatInput($event.target)"
 							(keydown.ArrowUp)="changeSecond(secondStep); $event.preventDefault()"
 							(keydown.ArrowDown)="changeSecond(-secondStep); $event.preventDefault()"
 						/>
@@ -286,7 +287,7 @@ export class NgbTimepicker implements ControlValueAccessor, OnChanges {
 
 	constructor(
 		private readonly _config: NgbTimepickerConfig,
-		private _ngbTimeAdapter: NgbTimeAdapter<any>,
+		private _ngbTimeAdapter: NgbTimeAdapter<NgbTimeStruct>,
 		private _cd: ChangeDetectorRef,
 		public i18n: NgbTimepickerI18n,
 	) {
@@ -301,23 +302,25 @@ export class NgbTimepicker implements ControlValueAccessor, OnChanges {
 		this.size = _config.size;
 	}
 
-	onChange = (_: any) => {};
+	onChange = (_: NgbTimeStruct | null) => { };
 	onTouched = () => {};
 
 	writeValue(value) {
 		const structValue = this._ngbTimeAdapter.fromModel(value);
-		this.model = structValue ? new NgbTime(structValue.hour, structValue.minute, structValue.second) : new NgbTime();
+		this.model = structValue
+			? new NgbTime(structValue.hour ?? undefined, structValue.minute ?? undefined, structValue.second ?? undefined)
+			: new NgbTime();
 		if (!this.seconds && (!structValue || !isNumber(structValue.second))) {
 			this.model.second = 0;
 		}
 		this._cd.markForCheck();
 	}
 
-	registerOnChange(fn: (value: any) => any): void {
+	registerOnChange(fn: (value: NgbTimeStruct | null) => void): void {
 		this.onChange = fn;
 	}
 
-	registerOnTouched(fn: () => any): void {
+	registerOnTouched(fn: () => void): void {
 		this.onTouched = fn;
 	}
 

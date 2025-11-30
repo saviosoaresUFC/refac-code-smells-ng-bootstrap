@@ -9,15 +9,15 @@ export interface NgbDateStruct {
 	/**
 	 * The year, for example 2016
 	 */
-	year: number;
+	year: number | null;
 
 	/**
 	 * The month, for example 1=Jan ... 12=Dec
 	 */
-	month: number;
+	month: number | null;
 
 	/**
 	 * The day of month, starting at 1
 	 */
-	day: number;
+	day: number | null;
 }

@@ -39,7 +39,7 @@ export class NgbTimeStructAdapter extends NgbTimeAdapter<NgbTimeStruct> {
 	 */
 	fromModel(time: NgbTimeStruct | null): NgbTimeStruct | null {
 		return time && isInteger(time.hour) && isInteger(time.minute)
-			? { hour: time.hour, minute: time.minute, second: isInteger(time.second) ? time.second : <any>null }
+			? { hour: time.hour, minute: time.minute, second: isInteger(time.second) ? time.second : null }
 			: null;
 	}
 
@@ -48,7 +48,7 @@ export class NgbTimeStructAdapter extends NgbTimeAdapter<NgbTimeStruct> {
 	 */
 	toModel(time: NgbTimeStruct | null): NgbTimeStruct | null {
 		return time && isInteger(time.hour) && isInteger(time.minute)
-			? { hour: time.hour, minute: time.minute, second: isInteger(time.second) ? time.second : <any>null }
+			? { hour: time.hour, minute: time.minute, second: isInteger(time.second) ? time.second : null }
 			: null;
 	}
 }

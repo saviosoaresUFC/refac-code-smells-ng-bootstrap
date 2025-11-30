@@ -20,17 +20,17 @@ export class NgbDate implements NgbDateStruct {
 	/**
 	 * The year, for example 2016
 	 */
-	year: number;
+	year: number | null;
 
 	/**
 	 * The month, for example 1=Jan ... 12=Dec as in ISO 8601
 	 */
-	month: number;
+	month: number | null;
 
 	/**
 	 * The day of month, starting with 1
 	 */
-	day: number;
+	day: number | null;
 
 	/**
 	 * A **static method** that creates a new date object from the `NgbDateStruct`,
@@ -43,13 +43,15 @@ export class NgbDate implements NgbDateStruct {
 		if (date instanceof NgbDate) {
 			return date;
 		}
-		return date ? new NgbDate(date.year, date.month, date.day) : null;
+		return date && date.year !== null && date.month !== null && date.day !== null
+			? new NgbDate(date.year, date.month, date.day)
+			: null;
 	}
 
 	constructor(year: number, month: number, day: number) {
-		this.year = isInteger(year) ? year : <any>null;
-		this.month = isInteger(month) ? month : <any>null;
-		this.day = isInteger(day) ? day : <any>null;
+		this.year = isInteger(year) ? year : null;
+		this.month = isInteger(month) ? month : null;
+		this.day = isInteger(day) ? day : null;
 	}
 
 	/**

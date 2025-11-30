@@ -21,7 +21,7 @@ export class ContentRef {
 	constructor(
 		public nodes: Node[][],
 		public viewRef?: ViewRef,
-		public componentRef?: ComponentRef<any>,
+		public componentRef?: ComponentRef<unknown>,
 	) {}
 }
 
@@ -38,8 +38,8 @@ export class PopupService<T> {
 	constructor(private _componentType: Type<T>) {}
 
 	open(
-		content?: string | TemplateRef<any>,
-		templateContext?: any,
+		content?: string | TemplateRef<Record<string, unknown>>,
+		templateContext?: Record<string, unknown>,
 		animation = false,
 	): { windowRef: ComponentRef<T>; transition$: Observable<void> } {
 		if (!this._windowRef) {
@@ -96,11 +96,11 @@ export class PopupService<T> {
 		);
 	}
 
-	private _getContentRef(content?: string | TemplateRef<any>, templateContext?: any): ContentRef {
+	private _getContentRef(content?: string | TemplateRef<Record<string, unknown>>, templateContext?: Record<string, unknown>): ContentRef {
 		if (!content) {
 			return new ContentRef([]);
 		} else if (content instanceof TemplateRef) {
-			const viewRef = content.createEmbeddedView(templateContext);
+			const viewRef = content.createEmbeddedView(templateContext!); // "!" ignora o check de null
 			this._applicationRef.attachView(viewRef);
 			return new ContentRef([viewRef.rootNodes], viewRef);
 		} else {
