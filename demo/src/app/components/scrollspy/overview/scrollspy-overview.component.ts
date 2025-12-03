@@ -4,7 +4,9 @@ import { Snippet } from '../../../services/snippet';
 import { CodeComponent } from '../../../shared/code.component';
 import { RouterLink } from '@angular/router';
 import { PageHeaderComponent } from '../../../shared/page-header.component';
-import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.class';
+// REFACTOR: Herança removida
+// import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.class';
+import { COMPONENT_DATA } from '../../../tokens';
 
 @Component({
 	selector: 'ngbd-scrollspy-overview',
@@ -12,7 +14,18 @@ import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.cl
 	templateUrl: './scrollspy-overview.component.html',
 	host: { '[class.overview]': 'true' },
 })
-export class NgbdScrollSpyOverviewComponent extends NgbdOverviewPage {
+export class NgbdScrollSpyOverviewComponent {
+  // REFACTOR: Injeção direta (Composição)
+	private _component = inject(COMPONENT_DATA);
+
+	get overview() {
+		return this._component.overview;
+	}
+
+	get menuItems() {
+		return Object.entries(this.overview).map(([fragment, title]) => ({ fragment, title }));
+	}
+
 	SERVICE = Snippet({
 		lang: 'ts',
 		code: `

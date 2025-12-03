@@ -6,7 +6,9 @@ import { NgbAlert } from '@ng-bootstrap/ng-bootstrap/alert';
 import { NgbdApiDocsBadge } from '../../../shared/api-docs';
 import { RouterLink } from '@angular/router';
 import { PageHeaderComponent } from '../../../shared/page-header.component';
-import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.class';
+// REFACTOR: Removemos o import da classe pai
+// import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.class';
+import { COMPONENT_DATA } from '../../../tokens';
 
 @Component({
 	selector: 'ngbd-pagination-overview',
@@ -15,7 +17,18 @@ import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.cl
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	host: { '[class.overview]': 'true' },
 })
-export class NgbdPaginationOverviewComponent extends NgbdOverviewPage {
+export class NgbdPaginationOverviewComponent {
+  // REFACTOR: Injeção direta (Composição) substituindo a herança
+	private _component = inject(COMPONENT_DATA);
+
+	get overview() {
+		return this._component.overview;
+	}
+
+	get menuItems() {
+		return Object.entries(this.overview).map(([fragment, title]) => ({ fragment, title }));
+	}
+  
 	NGFOR = Snippet({
 		lang: 'html',
 		code: `

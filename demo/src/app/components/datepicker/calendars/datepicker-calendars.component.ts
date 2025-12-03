@@ -11,7 +11,8 @@ import { CodeComponent } from '../../../shared/code.component';
 import { NgbdWidgetDemoComponent } from '../../../shared/examples-page/demo.component';
 import { NgComponentOutlet } from '@angular/common';
 import { NgbdDatepickerEthiopian } from '../demos/ethiopian/datepicker-ethiopian';
-import { NgbdComponentPage } from '../../../shared/component-wrapper/component-page.class';
+// REFACTOR: Import removido pois a herança não é necessária
+// import { NgbdComponentPage } from '../../../shared/component-wrapper/component-page.class';
 import { Demo, MenuItem } from 'src/app/tokens';
 
 const DEMOS: Demo[] = [
@@ -111,7 +112,8 @@ const DEMOS: Demo[] = [
 		}
 	`,
 })
-export class NgbdDatepickerCalendarsComponent extends NgbdComponentPage {
+export class NgbdDatepickerCalendarsComponent {
+	// REFACTOR: Removvi o extends NgbdComponentPage
 	get menuItems(): MenuItem[] {
 		return DEMOS;
 	}

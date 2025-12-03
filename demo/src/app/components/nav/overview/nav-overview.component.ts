@@ -15,7 +15,9 @@ import { CodeComponent } from '../../../shared/code.component';
 import { RouterLink } from '@angular/router';
 import { NgbdApiDocsBadge } from '../../../shared/api-docs';
 import { PageHeaderComponent } from '../../../shared/page-header.component';
-import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.class';
+// REFACTOR: Import removido, vamos usar tokens diretos
+// import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.class';
+import { COMPONENT_DATA } from '../../../tokens';
 
 @Component({
 	selector: 'ngbd-nav-overview',
@@ -36,7 +38,18 @@ import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.cl
 	templateUrl: './nav-overview.component.html',
 	host: { '[class.overview]': 'true' },
 })
-export class NgbdNavOverviewComponent extends NgbdOverviewPage {
+export class NgbdNavOverviewComponent {
+  // REFACTOR: Injeção direta (Composição) substituindo a herança
+	private _component = inject(COMPONENT_DATA);
+
+	get overview() {
+		return this._component.overview;
+	}
+
+	get menuItems() {
+		return Object.entries(this.overview).map(([fragment, title]) => ({ fragment, title }));
+	}
+  
 	BASIC = Snippet({
 		lang: 'html',
 		code: `

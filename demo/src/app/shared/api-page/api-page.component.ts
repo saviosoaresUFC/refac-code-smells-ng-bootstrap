@@ -2,8 +2,9 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 import apiDocs from '../../../api-docs';
 import { NgbdApiDocs, NgbdApiDocsClass, NgbdApiDocsConfig } from '../api-docs';
-import { NgbdComponentPage } from '../component-wrapper/component-page.class';
-import { MENU_SEPARATOR, MenuItem } from 'src/app/tokens';
+// REFACTOR: Import removido e token adicionado
+// import { NgbdComponentPage } from '../component-wrapper/component-page.class'; from 'src/app/tokens';
+import { MENU_SEPARATOR, MenuItem, COMPONENT_DATA } from 'src/app/tokens';
 
 export function getApis(component: string) {
 	const components: string[] = [];
@@ -53,7 +54,10 @@ function toMenuItems(names: string[]): MenuItem[] {
 		}
 	`,
 })
-export class NgbdApiPage extends NgbdComponentPage {
+export class NgbdApiPage {
+	// REFACTOR: Injeção direta (Composição)
+	private _component = inject(COMPONENT_DATA);
+
 	get menuItems(): MenuItem[] {
 		const components = toMenuItems(this.components);
 		const classes = toMenuItems(this.classes);
@@ -77,8 +81,8 @@ export class NgbdApiPage extends NgbdComponentPage {
 	configs: string[];
 
 	constructor() {
-		super();
-		const apis = getApis(this.component.name);
+		// REFACTOR: Uso do dado injetado (_component) em vez do herdado (this.component)
+		const apis = getApis(this._component.name);
 		this.components = apis.components.sort();
 		this.classes = apis.classes.sort();
 		this.configs = apis.configs.sort();

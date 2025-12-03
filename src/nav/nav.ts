@@ -164,6 +164,65 @@ export class NgbNavItem implements OnInit {
 	}
 }
 
+// REFACTOR: Classe unificada, substituindo NgbNavLinkBase, NgbNavLinkButton e NgbNavLink
+/**
+ * A directive to mark the nav link when used on a link or button element.
+ *
+ * @since 5.2.0
+ */
+@Directive({
+	selector: '[ngbNavLink]',
+	host: {
+		'[id]': 'navItem.domId',
+		class: 'nav-link',
+		'[class.nav-item]': 'navItem.isNgContainer()',
+		'[attr.role]': `role ? role : nav.roles ? 'tab' : undefined`,
+		'[class.active]': 'navItem.active',
+		'[class.disabled]': 'navItem.disabled',
+		'[attr.tabindex]': 'tabindex',
+		'[attr.aria-controls]': 'navItem.isPanelInDom() ? navItem.panelDomId : null',
+		'[attr.aria-selected]': 'navItem.active',
+		'[attr.aria-disabled]': 'navItem.disabled',
+		// Bindings condicionais baseados no tipo de elemento
+		'[attr.href]': `isAnchor ? '' : null`,
+		'[attr.type]': `isButton ? 'button' : null`,
+		'[disabled]': `isButton && navItem.disabled ? true : null`,
+		'(click)': 'onClick($event)',
+	},
+})
+export class NgbNavLink {
+	navItem = inject(NgbNavItem);
+	nav = inject(NgbNav);
+	nativeElement = inject(ElementRef).nativeElement as HTMLElement;
+
+	constructor(@Attribute('role') public role: string) {}
+
+	get isAnchor() {
+		return this.nativeElement.tagName === 'A';
+	}
+
+	get isButton() {
+		return this.nativeElement.tagName === 'BUTTON';
+	}
+
+	get tabindex() {
+		if (this.nav.keyboard === false) {
+			return this.navItem.disabled ? -1 : undefined;
+		}
+		if (this.nav._navigatingWithKeyboard) {
+			return -1;
+		}
+		return this.navItem.disabled || !this.navItem.active ? -1 : undefined;
+	}
+
+	onClick(event: Event) {
+		this.nav.click(this.navItem);
+		if (this.isAnchor) {
+			event.preventDefault();
+		}
+	}
+}
+
 /**
  * A nav directive that helps with implementing tabbed navigation components.
  *
@@ -273,7 +332,8 @@ export class NgbNav implements AfterContentInit, OnChanges {
 	@Output() hidden = new EventEmitter<any>();
 
 	@ContentChildren(NgbNavItem) items: QueryList<NgbNavItem>;
-	@ContentChildren(forwardRef(() => NgbNavLinkBase), { descendants: true }) links: QueryList<NgbNavLinkBase>;
+	// REFACTOR: Referência atualizada para a nova classe única NgbNavLink
+	@ContentChildren(forwardRef(() => NgbNavLink), { descendants: true }) links: QueryList<NgbNavLink>;
 
 	navItemChange$ = new Subject<NgbNavItem | null>();
 
@@ -400,66 +460,6 @@ export class NgbNav implements AfterContentInit, OnChanges {
 		return (this.items && this.items.find((item) => item.id === itemId)) || null;
 	}
 }
-
-@Directive({
-	selector: '[ngbNavLink]',
-	host: {
-		'[id]': 'navItem.domId',
-		class: 'nav-link',
-		'[class.nav-item]': 'navItem.isNgContainer()',
-		'[attr.role]': `role ? role : nav.roles ? 'tab' : undefined`,
-		'[class.active]': 'navItem.active',
-		'[class.disabled]': 'navItem.disabled',
-		'[attr.tabindex]': 'tabindex',
-		'[attr.aria-controls]': 'navItem.isPanelInDom() ? navItem.panelDomId : null',
-		'[attr.aria-selected]': 'navItem.active',
-		'[attr.aria-disabled]': 'navItem.disabled',
-	},
-})
-export class NgbNavLinkBase {
-	navItem = inject(NgbNavItem);
-	nav = inject(NgbNav);
-	nativeElement = inject(ElementRef).nativeElement as HTMLElement;
-
-	constructor(@Attribute('role') public role: string) {}
-
-	get tabindex() {
-		if (this.nav.keyboard === false) {
-			return this.navItem.disabled ? -1 : undefined;
-		}
-		if (this.nav._navigatingWithKeyboard) {
-			return -1;
-		}
-		return this.navItem.disabled || !this.navItem.active ? -1 : undefined;
-	}
-}
-
-/**
- * A directive to mark the nav link when used on a button element.
- */
-@Directive({
-	selector: 'button[ngbNavLink]',
-	host: {
-		type: 'button',
-		'[disabled]': 'navItem.disabled',
-		'(click)': 'nav.click(navItem)',
-	},
-})
-export class NgbNavLinkButton extends NgbNavLinkBase {}
-
-/**
- * A directive to mark the nav link when used on a link element.
- *
- * @since 5.2.0
- */
-@Directive({
-	selector: 'a[ngbNavLink]',
-	host: {
-		href: '',
-		'(click)': 'nav.click(navItem); $event.preventDefault()',
-	},
-})
-export class NgbNavLink extends NgbNavLinkBase {}
 
 /**
  * The payload of the change event emitted right before the nav change happens on user click.

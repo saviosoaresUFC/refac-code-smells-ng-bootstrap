@@ -5,7 +5,7 @@ import { CodeComponent } from '../../../shared/code.component';
 import { RouterLink } from '@angular/router';
 import { NgbdAccordionDemoComponent } from './demo/accordion-overview-demo.component';
 import { PageHeaderComponent } from '../../../shared/page-header.component';
-import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.class';
+import { COMPONENT_DATA } from '../../../tokens';
 
 @Component({
 	selector: 'ngbd-accordion-overview',
@@ -14,7 +14,16 @@ import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.cl
 	templateUrl: './accordion-overview.component.html',
 	host: { class: 'overview' },
 })
-export class NgbdAccordionOverviewComponent extends NgbdOverviewPage {
+export class NgbdAccordionOverviewComponent {
+
+  // REFACTOR: Injeção direta (Composição) substituindo a herança
+	private _component = inject(COMPONENT_DATA);
+
+	// REFACTOR: Lógica trazida da classe pai (NgbdOverviewPage)
+	get overview() {
+		return this._component.overview;
+	}
+
 	BASIC_ACCORDION = Snippet({
 		lang: 'html',
 		code: `

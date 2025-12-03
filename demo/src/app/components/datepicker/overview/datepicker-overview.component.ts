@@ -5,7 +5,9 @@ import { RouterLink } from '@angular/router';
 import { NgbAlert } from '@ng-bootstrap/ng-bootstrap/alert';
 import { NgbdDatepickerOverviewDemoComponent } from './demo/datepicker-overview-demo.component';
 import { PageHeaderComponent } from '../../../shared/page-header.component';
-import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.class';
+// REFACTOR: Import removido, vamos usar tokens diretos
+// import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.class';
+import { COMPONENT_DATA } from '../../../tokens';
 
 @Component({
 	selector: 'ngbd-datepicker-overview',
@@ -16,7 +18,18 @@ import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.cl
 		class: 'overview',
 	},
 })
-export class NgbdDatepickerOverviewComponent extends NgbdOverviewPage {
+export class NgbdDatepickerOverviewComponent {
+  // REFACTOR: Injeção direta (Composição) substituindo a herança
+	private _component = inject(COMPONENT_DATA);
+
+  get overview() {
+		return this._component.overview;
+	}
+
+	get menuItems() {
+		return Object.entries(this.overview).map(([fragment, title]) => ({ fragment, title }));
+	}
+  
 	snippets = {
 		basic: Snippet({
 			lang: 'html',

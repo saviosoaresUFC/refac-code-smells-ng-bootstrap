@@ -14,7 +14,9 @@ import {
 	NgbNavOutlet,
 } from '@ng-bootstrap/ng-bootstrap/nav';
 import { PageHeaderComponent } from '../../../shared/page-header.component';
-import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.class';
+// REFACTOR: Import removido
+// import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.class';
+import { COMPONENT_DATA } from '../../../tokens';
 
 @Component({
 	selector: 'ngbd-toast-overview',
@@ -35,7 +37,18 @@ import { NgbdOverviewPage } from '../../../shared/overview-page/overview-page.cl
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	host: { '[class.overview]': 'true' },
 })
-export class NgbdToastOverviewComponent extends NgbdOverviewPage {
+export class NgbdToastOverviewComponent {
+	// REFACTOR: Injeção direta (Composição)
+	private _component = inject(COMPONENT_DATA);
+
+	get overview() {
+		return this._component.overview;
+	}
+
+	get menuItems() {
+		return Object.entries(this.overview).map(([fragment, title]) => ({ fragment, title }));
+	}
+	
 	TOAST_INLINE_BASIC = Snippet({
 		lang: 'html',
 		code: `
