@@ -1,6 +1,9 @@
 import { NgbDate } from '../ngb-date';
 import { NgbDateStruct } from '../ngb-date-struct';
 
+// REFACTOR: Re-exportar a função movida para manter compatibilidade
+export { hebrewNumerals } from './hebrew-numerals';
+
 const PARTS_PER_HOUR = 1080;
 const PARTS_PER_DAY = 24 * PARTS_PER_HOUR;
 const PARTS_FRACTIONAL_MONTH = 12 * PARTS_PER_HOUR + 793;
@@ -45,10 +48,6 @@ function getHebrewMonths(year: number): number {
 	return isHebrewLeapYear(year) ? 13 : 12;
 }
 
-/**
- * Returns the number of days in a specific Hebrew year.
- * `year` is any Hebrew year.
- */
 function getDaysInHebrewYear(year: number): number {
 	return numberOfFirstDayInYear(year + 1) - numberOfFirstDayInYear(year);
 }
@@ -61,11 +60,6 @@ export function isHebrewLeapYear(year?: number): boolean {
 	return false;
 }
 
-/**
- * Returns the number of days in a specific Hebrew month.
- * `month` is 1 for Nisan, 2 for Iyar etc. Note: Hebrew leap year contains 13 months.
- * `year` is any Hebrew year.
- */
 export function getDaysInHebrewMonth(month: number, year: number): number {
 	let yearLength = numberOfFirstDayInYear(year + 1) - numberOfFirstDayInYear(year);
 	let yearType = (yearLength <= 380 ? yearLength : yearLength - 30) - 353;
@@ -157,10 +151,6 @@ export function setHebrewDay(date: NgbDate, val: number): NgbDate {
 	return date;
 }
 
-/**
- * Returns the equivalent Hebrew date value for a give input Gregorian date.
- * `gdate` is a JS Date to be converted to Hebrew date.
- */
 export function fromGregorian(gdate: Date): NgbDate {
 	const date = new Date(gdate);
 	const gYear = date.getFullYear(),
@@ -194,10 +184,6 @@ export function fromGregorian(gdate: Date): NgbDate {
 	return new NgbDate(hYear, hMonth, hDay);
 }
 
-/**
- * Returns the equivalent JS date value for a given Hebrew date.
- * `hebrewDate` is an Hebrew date to be converted to Gregorian.
- */
 export function toGregorian(hebrewDate: NgbDateStruct | NgbDate): Date {
 	const hYear = hebrewDate.year;
 	const hMonth = hebrewDate.month;
@@ -248,84 +234,4 @@ export function toGregorian(hebrewDate: NgbDateStruct | NgbDate): Date {
 		}
 	}
 	return new Date(gYear, gMonth - 1, gDay);
-}
-
-export function hebrewNumerals(numerals: number): string {
-	if (!numerals) {
-		return '';
-	}
-	const hArray0_9 = ['', '\u05d0', '\u05d1', '\u05d2', '\u05d3', '\u05d4', '\u05d5', '\u05d6', '\u05d7', '\u05d8'];
-	const hArray10_19 = [
-		'\u05d9',
-		'\u05d9\u05d0',
-		'\u05d9\u05d1',
-		'\u05d9\u05d2',
-		'\u05d9\u05d3',
-		'\u05d8\u05d5',
-		'\u05d8\u05d6',
-		'\u05d9\u05d6',
-		'\u05d9\u05d7',
-		'\u05d9\u05d8',
-	];
-	const hArray20_90 = ['', '', '\u05db', '\u05dc', '\u05de', '\u05e0', '\u05e1', '\u05e2', '\u05e4', '\u05e6'];
-	const hArray100_900 = [
-		'',
-		'\u05e7',
-		'\u05e8',
-		'\u05e9',
-		'\u05ea',
-		'\u05ea\u05e7',
-		'\u05ea\u05e8',
-		'\u05ea\u05e9',
-		'\u05ea\u05ea',
-		'\u05ea\u05ea\u05e7',
-	];
-	const hArray1000_9000 = [
-		'',
-		'\u05d0',
-		'\u05d1',
-		'\u05d1\u05d0',
-		'\u05d1\u05d1',
-		'\u05d4',
-		'\u05d4\u05d0',
-		'\u05d4\u05d1',
-		'\u05d4\u05d1\u05d0',
-		'\u05d4\u05d1\u05d1',
-	];
-	const geresh = '\u05f3',
-		gershaim = '\u05f4';
-	let mem = 0;
-	let result: string[] = [];
-	let step = 0;
-	while (numerals > 0) {
-		let m = numerals % 10;
-		if (step === 0) {
-			mem = m;
-		} else if (step === 1) {
-			if (m !== 1) {
-				result.unshift(hArray20_90[m], hArray0_9[mem]);
-			} else {
-				result.unshift(hArray10_19[mem]);
-			}
-		} else if (step === 2) {
-			result.unshift(hArray100_900[m]);
-		} else {
-			if (m !== 5) {
-				result.unshift(hArray1000_9000[m], geresh, ' ');
-			}
-			break;
-		}
-		numerals = Math.floor(numerals / 10);
-		if (step === 0 && numerals === 0) {
-			result.unshift(hArray0_9[m]);
-		}
-		step++;
-	}
-	result = result.join('').split('');
-	if (result.length === 1) {
-		result.push(geresh);
-	} else if (result.length > 1) {
-		result.splice(result.length - 1, 0, gershaim);
-	}
-	return result.join('');
 }

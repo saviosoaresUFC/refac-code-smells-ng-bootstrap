@@ -2,32 +2,30 @@ import {
 	ApplicationRef,
 	ComponentRef,
 	createComponent,
-	EnvironmentInjector,
 	EventEmitter,
 	inject,
 	Injectable,
 	Injector,
 	NgZone,
-	TemplateRef,
-	Type,
 	DOCUMENT,
 } from '@angular/core';
 import { Subject } from 'rxjs';
 
-import { isDefined, isString, ngbFocusTrap, ContentRef, ScrollBar } from '@ng-bootstrap/ng-bootstrap/utils';
+import { isDefined, ngbFocusTrap, ScrollBar } from '@ng-bootstrap/ng-bootstrap/utils';
 import { NgbModalBackdrop } from './modal-backdrop';
 import { NgbModalOptions, NgbModalUpdatableOptions } from './modal-config';
 import { NgbActiveModal, NgbModalRef } from './modal-ref';
 import { NgbModalWindow } from './modal-window';
 import { take } from 'rxjs/operators';
+import { NgbModalContentInjector } from './modal-content-injector';
 
 @Injectable({ providedIn: 'root' })
 export class NgbModalStack {
 	private _applicationRef = inject(ApplicationRef);
 	private _injector = inject(Injector);
-	private _environmentInjector = inject(EnvironmentInjector);
 	private _document = inject(DOCUMENT);
 	private _scrollBar = inject(ScrollBar);
+	private _contentInjector = inject(NgbModalContentInjector);
 
 	private _activeWindowCmptHasChanged = new Subject<void>();
 	private _ariaHiddenValues: Map<Element, string | null> = new Map();
@@ -38,8 +36,6 @@ export class NgbModalStack {
 
 	constructor() {
 		const ngZone = inject(NgZone);
-
-		// Trap focus on active WindowCmpt
 		this._activeWindowCmptHasChanged.subscribe(() => {
 			if (this._windowCmpts.length) {
 				const activeWindowCmpt = this._windowCmpts[this._windowCmpts.length - 1];
@@ -79,10 +75,10 @@ export class NgbModalStack {
 		this._hideScrollBar();
 
 		const activeModal = new NgbActiveModal();
-
 		contentInjector = options.injector || contentInjector;
-		const environmentInjector = contentInjector.get(EnvironmentInjector, null) || this._environmentInjector;
-		const contentRef = this._getContentRef(contentInjector, environmentInjector, content, activeModal, options);
+
+		// REFACTOR: Delegação para o novo serviço de injeção de conteúdo
+		const contentRef = this._contentInjector.getContentRef(contentInjector, content, activeModal, options);
 
 		let backdropCmptRef: ComponentRef<NgbModalBackdrop> | undefined =
 			options.backdrop !== false ? this._attachBackdrop(containerEl) : undefined;
@@ -92,9 +88,6 @@ export class NgbModalStack {
 		this._registerModalRef(ngbModalRef);
 		this._registerWindowCmpt(windowCmptRef);
 
-		// We have to cleanup DOM after the last modal when BOTH 'hidden' was emitted and 'result' promise was resolved:
-		// - with animations OFF, 'hidden' emits synchronously, then 'result' is resolved asynchronously
-		// - with animations ON, 'result' is resolved asynchronously, then 'hidden' emits asynchronously
 		ngbModalRef.hidden.pipe(take(1)).subscribe(() =>
 			Promise.resolve(true).then(() => {
 				if (!this._modalRefs.length) {
@@ -159,69 +152,6 @@ export class NgbModalStack {
 		this._applicationRef.attachView(windowCmptRef.hostView);
 		containerEl.appendChild(windowCmptRef.location.nativeElement);
 		return windowCmptRef;
-	}
-
-	private _getContentRef(
-		contentInjector: Injector,
-		environmentInjector: EnvironmentInjector,
-		content: Type<any> | TemplateRef<any> | string,
-		activeModal: NgbActiveModal,
-		options: NgbModalOptions,
-	): ContentRef {
-		if (!content) {
-			return new ContentRef([]);
-		} else if (content instanceof TemplateRef) {
-			return this._createFromTemplateRef(content, activeModal);
-		} else if (isString(content)) {
-			return this._createFromString(content);
-		} else {
-			return this._createFromComponent(contentInjector, environmentInjector, content, activeModal, options);
-		}
-	}
-
-	private _createFromTemplateRef(templateRef: TemplateRef<any>, activeModal: NgbActiveModal): ContentRef {
-		const context = {
-			$implicit: activeModal,
-			close(result) {
-				activeModal.close(result);
-			},
-			dismiss(reason) {
-				activeModal.dismiss(reason);
-			},
-		};
-		const viewRef = templateRef.createEmbeddedView(context);
-		this._applicationRef.attachView(viewRef);
-		return new ContentRef([viewRef.rootNodes], viewRef);
-	}
-
-	private _createFromString(content: string): ContentRef {
-		const component = this._document.createTextNode(`${content}`);
-		return new ContentRef([[component]]);
-	}
-
-	private _createFromComponent(
-		contentInjector: Injector,
-		environmentInjector: EnvironmentInjector,
-		componentType: Type<any>,
-		context: NgbActiveModal,
-		options: NgbModalOptions,
-	): ContentRef {
-		const elementInjector = Injector.create({
-			providers: [{ provide: NgbActiveModal, useValue: context }],
-			parent: contentInjector,
-		});
-		const componentRef = createComponent(componentType, {
-			environmentInjector,
-			elementInjector,
-		});
-		const componentNativeEl = componentRef.location.nativeElement;
-		if (options.scrollable) {
-			(componentNativeEl as HTMLElement).classList.add('component-host-scrollable');
-		}
-		this._applicationRef.attachView(componentRef.hostView);
-		// FIXME: we should here get rid of the component nativeElement
-		// and use `[Array.from(componentNativeEl.childNodes)]` instead and remove the above CSS class.
-		return new ContentRef([[componentNativeEl]], componentRef.hostView, componentRef);
 	}
 
 	private _setAriaHidden(element: Element) {

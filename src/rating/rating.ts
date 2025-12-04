@@ -1,38 +1,10 @@
-import {
-	ChangeDetectionStrategy,
-	ChangeDetectorRef,
-	Component,
-	ContentChild,
-	EventEmitter,
-	forwardRef,
-	inject,
-	Input,
-	OnChanges,
-	OnInit,
-	Output,
-	SimpleChanges,
-	TemplateRef,
-	ViewEncapsulation,
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, EventEmitter, forwardRef,
+	inject, Input, OnChanges, OnInit, Output, SimpleChanges, TemplateRef, ViewEncapsulation,
 } from '@angular/core';
 import { NgbRatingConfig } from './rating-config';
 import { getValueInRange } from '@ng-bootstrap/ng-bootstrap/utils';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { NgTemplateOutlet } from '@angular/common';
-
-/**
- * The context for the custom star display template defined in the `starTemplate`.
- */
-export interface StarTemplateContext {
-	/**
-	 * The star fill percentage, an integer in the `[0, 100]` range.
-	 */
-	fill: number;
-
-	/**
-	 * Index of the star, starts with `0`.
-	 */
-	index: number;
-}
 
 /**
  * A directive that helps visualising and interacting with a star rating bar.
@@ -79,77 +51,33 @@ export class NgbRating implements ControlValueAccessor, OnInit, OnChanges {
 	nextRate: number;
 
 	private _config = inject(NgbRatingConfig);
+	
 	private _changeDetectorRef = inject(ChangeDetectorRef);
 
-	/**
-	 * If `true`, the rating can't be changed or focused.
-	 */
 	@Input() disabled = false;
 
-	/**
-	 * The maximal rating that can be given.
-	 */
 	@Input() max = this._config.max;
 
-	/**
-	 * The current rating. Could be a decimal value like `3.75`.
-	 */
 	@Input() rate: number;
 
-	/**
-	 * If `true`, the rating can't be changed.
-	 */
 	@Input() readonly = this._config.readonly;
 
-	/**
-	 * If `true`, the rating can be reset to `0` by mouse clicking currently set rating.
-	 */
 	@Input() resettable = this._config.resettable;
 
-	/**
-	 * The template to override the way each star is displayed.
-	 *
-	 * Alternatively put an `<ng-template>` as the only child of your `<ngb-rating>` element
-	 */
 	@Input() starTemplate: TemplateRef<StarTemplateContext>;
+	
 	@ContentChild(TemplateRef, { static: false }) starTemplateFromContent: TemplateRef<StarTemplateContext>;
 
-	/**
-	 * Allows setting a custom rating tabindex.
-	 * If the component is disabled, `tabindex` will still be set to `-1`.
-	 *
-	 * @since 13.1.0
-	 */
 	@Input() tabindex = this._config.tabindex;
 
-	/**
-	 * Allows to provide a function to set a custom aria-valuetext
-	 *
-	 * @since 14.1.0
-	 */
 	@Input() ariaValueText(current: number, max: number) {
 		return `${current} out of ${max}`;
 	}
 
-	/**
-	 * An event emitted when the user is hovering over a given rating.
-	 *
-	 * Event payload equals to the rating being hovered over.
-	 */
 	@Output() hover = new EventEmitter<number>();
 
-	/**
-	 * An event emitted when the user stops hovering over a given rating.
-	 *
-	 * Event payload equals to the rating of the last item being hovered over.
-	 */
 	@Output() leave = new EventEmitter<number>();
 
-	/**
-	 * An event emitted when the rating is changed.
-	 *
-	 * Event payload equals to the newly selected rating.
-	 */
 	@Output() rateChange = new EventEmitter<number>(true);
 
 	onChange = (_: any) => {};
@@ -177,27 +105,12 @@ export class NgbRating implements ControlValueAccessor, OnInit, OnChanges {
 	}
 
 	handleKeyDown(event: KeyboardEvent) {
-		switch (event.key) {
-			case 'ArrowDown':
-			case 'ArrowLeft':
-				this.update(this.rate - 1);
-				break;
-			case 'ArrowUp':
-			case 'ArrowRight':
-				this.update(this.rate + 1);
-				break;
-			case 'Home':
-				this.update(0);
-				break;
-			case 'End':
-				this.update(this.max);
-				break;
-			default:
-				return;
+		// REFACTOR: Lógica de decisão movida para helper externo
+		const nextValue = getNextValueFromKey(event.key, this.rate, this.max);
+		if (nextValue !== null) {
+			this.update(nextValue);
+			event.preventDefault();
 		}
-
-		// note 'return' in default case
-		event.preventDefault();
 	}
 
 	ngOnChanges(changes: SimpleChanges) {
@@ -210,7 +123,7 @@ export class NgbRating implements ControlValueAccessor, OnInit, OnChanges {
 	}
 
 	ngOnInit(): void {
-		this._setupContexts();
+		this.contexts = createStarContexts(this.max);
 		this._updateState(this.rate);
 	}
 
@@ -251,19 +164,14 @@ export class NgbRating implements ControlValueAccessor, OnInit, OnChanges {
 
 	private _updateState(nextValue: number) {
 		this.nextRate = nextValue;
-		this.contexts.forEach(
-			(context, index) => (context.fill = Math.round(getValueInRange(nextValue - index, 1, 0) * 100)),
-		);
+		// REFACTOR: Lógica de preenchimento movida para helper externo
+		updateStars(this.contexts, nextValue);
 	}
 
 	private _updateMax() {
 		if (this.max > 0) {
-			this._setupContexts();
+			this.contexts = createStarContexts(this.max);
 			this.update(this.rate);
 		}
-	}
-
-	private _setupContexts() {
-		this.contexts = Array.from({ length: this.max }, (v, k) => ({ fill: 0, index: k }));
 	}
 }

@@ -6,95 +6,9 @@ import { NgbScrollSpyConfig } from './scrollspy-config';
 import { isPlatformBrowser } from '@angular/common';
 import { toFragmentElement } from './scrollspy.utils';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NgbScrollSpyOptions, NgbScrollToOptions } from './scrollspy-options';
 
 const MATCH_THRESHOLD = 3;
-
-export type NgbScrollSpyProcessChanges = (
-	state: {
-		entries: IntersectionObserverEntry[];
-		rootElement: HTMLElement;
-		fragments: Set<Element>;
-		scrollSpy: NgbScrollSpyService;
-		options: NgbScrollSpyOptions;
-	},
-	changeActive: (active: string) => void,
-	context: object,
-) => void;
-
-/**
- * Options passed to the `NgbScrollSpyService.start()` method for scrollspy initialization.
- *
- * It contains a subset of the `IntersectionObserverInit` options, as well additional optional properties
- * like `changeDetectorRef` or `fragments`
- *
- * @since 15.1.0
- */
-export interface NgbScrollSpyOptions extends Pick<IntersectionObserverInit, 'root' | 'rootMargin' | 'threshold'> {
-	/**
-	 * An optional reference to the change detector, that should be marked for check when active fragment changes.
-	 * If it is not provided, the service will try to get it from the DI. Ex. when using the `ngbScrollSpy` directive,
-	 * it will mark for check the directive's host component.
-	 *
-	 * `.markForCheck()` will be called on the change detector when the active fragment changes.
-	 */
-	changeDetectorRef?: ChangeDetectorRef;
-
-	/**
-	 * An optional initial fragment to scroll to when the service starts.
-	 */
-	initialFragment?: string | HTMLElement;
-
-	/**
-	 * An optional list of fragments to observe when the service starts.
-	 * You can alternatively use `.addFragment()` to add fragments.
-	 */
-	fragments?: (string | HTMLElement)[];
-
-	/**
-	 * An optional function that is called when the `IntersectionObserver` detects a change.
-	 * It is used to determine if currently active fragment should be changed.
-	 *
-	 * You can override this function to provide your own scrollspy logic.
-	 * It provides:
-	 *  - a scrollspy `state` (observer entries, root element, fragments, scrollSpy instance, etc.)
-	 *  - a `changeActive` function that should be called with the new active fragment
-	 *  - a `context` that is persisted between calls
-	 */
-	processChanges?: NgbScrollSpyProcessChanges;
-
-	/**
-	 * An optional `IntersectionObserver` root element. If not provided, the document element will be used.
-	 */
-	root?: HTMLElement;
-
-	/**
-	 * An optional `IntersectionObserver` margin for the root element.
-	 */
-	rootMargin?: string;
-
-	/**
-	 * An optional default scroll behavior to use when using the `.scrollTo()` method.
-	 */
-	scrollBehavior?: 'auto' | 'smooth';
-
-	/**
-	 * An optional `IntersectionObserver` threshold.
-	 */
-	threshold?: number | number[];
-}
-
-/**
- * Scroll options passed to the `.scrollTo()` method.
- * An extension of the standard `ScrollOptions` interface.
- *
- * @since 15.1.0
- */
-export interface NgbScrollToOptions extends ScrollOptions {
-	/**
-	 * Scroll behavior as defined in the `ScrollOptions` interface.
-	 */
-	behavior?: 'auto' | 'smooth';
-}
 
 /**
  * A scrollspy service that allows tracking of elements scrolling in and out of view.
@@ -132,26 +46,15 @@ export class NgbScrollSpyService implements NgbScrollSpyRef, OnDestroy {
 		});
 	}
 
-	/**
-	 * Getter for the currently active fragment id. Returns empty string if none.
-	 */
 	get active(): string {
 		return this._active;
 	}
 
-	/**
-	 * An observable emitting the currently active fragment. Emits empty string if none.
-	 */
+
 	get active$(): Observable<string> {
 		return this._distinctActive$;
 	}
 
-	/**
-	 * Starts the scrollspy service and observes specified fragments.
-	 *
-	 * You can specify a list of options to pass, like the root element, initial fragment, scroll behavior, etc.
-	 * See the [`NgbScrollSpyOptions`](#/components/scrollspy/api#NgbScrollSpyOptions) interface for more details.
-	 */
 	start(options?: NgbScrollSpyOptions) {
 		if (isPlatformBrowser(this._platformId)) {
 			this._cleanup();
@@ -185,7 +88,6 @@ export class NgbScrollSpyService implements NgbScrollSpyRef, OnDestroy {
 				},
 			);
 
-			// merging fragments added before starting and the ones passed as options
 			for (const element of [...this._preRegisteredFragments, ...(fragments ?? [])]) {
 				this.observe(element);
 			}
@@ -194,20 +96,10 @@ export class NgbScrollSpyService implements NgbScrollSpyRef, OnDestroy {
 		}
 	}
 
-	/**
-	 * Stops the service and unobserves all fragments.
-	 */
 	stop() {
 		this._cleanup();
 		this._active$.next('');
 	}
-
-	/**
-	 * Scrolls to a fragment, it must be known to the service and contained in the root element.
-	 * An id or an element reference can be passed.
-	 *
-	 * [`NgbScrollToOptions`](#/components/scrollspy/api#NgbScrollToOptions) can be passed.
-	 */
 	scrollTo(fragment: string | HTMLElement, options?: NgbScrollToOptions) {
 		const { behavior } = { behavior: this._scrollBehavior, ...options };
 
@@ -222,8 +114,6 @@ export class NgbScrollSpyService implements NgbScrollSpyRef, OnDestroy {
 				let lastOffset = this._containerElement.scrollTop;
 				let matchCounter = 0;
 
-				// we should update the active section only after scrolling is finished
-				// and there is no clean way to do it at the moment
 				const containerElement = this._containerElement;
 				this._zone.runOutsideAngular(() => {
 					const updateActiveWhenScrollingIsFinished = () => {
@@ -249,10 +139,6 @@ export class NgbScrollSpyService implements NgbScrollSpyRef, OnDestroy {
 		}
 	}
 
-	/**
-	 * Adds a fragment to observe. It must be contained in the root element.
-	 * An id or an element reference can be passed.
-	 */
 	observe(fragment: string | HTMLElement) {
 		if (!this._observer) {
 			this._preRegisteredFragments.add(fragment);
@@ -267,10 +153,6 @@ export class NgbScrollSpyService implements NgbScrollSpyRef, OnDestroy {
 		}
 	}
 
-	/**
-	 * Unobserves a fragment.
-	 * An id or an element reference can be passed.
-	 */
 	unobserve(fragment: string | HTMLElement) {
 		if (!this._observer) {
 			this._preRegisteredFragments.delete(fragment);
@@ -281,8 +163,6 @@ export class NgbScrollSpyService implements NgbScrollSpyRef, OnDestroy {
 
 		if (fragmentElement) {
 			this._fragments.delete(fragmentElement);
-
-			// we're removing and re-adding all current fragments to recompute active one
 			this._observer.disconnect();
 
 			for (const fragment of this._fragments) {
